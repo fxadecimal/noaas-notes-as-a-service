@@ -9,7 +9,7 @@ just run
 # take a look at the justfile to see what is going on
 ```
 
-![ss.gif][sr.gif]
+![sr.gif][sr.gif]
 
 ![ss1.png](ss1.png)
 
