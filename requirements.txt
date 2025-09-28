@@ -1,0 +1,5 @@
+aiohttp
+pyaudio
+numpy
+aiohttp_swagger
+# pyo

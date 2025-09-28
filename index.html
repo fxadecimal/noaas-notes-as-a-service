@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notes Web Client</title>
+    <style>
+        .keyboard { display: flex; gap: 8px; margin-bottom: 16px; }
+        .note-btn { padding: 16px; font-size: 18px; cursor: pointer; }
+        .active { background: #aaf; }
+        #playing-notes { margin-top: 16px; }
+    </style>
+</head>
+<body>
+    <div class="keyboard" id="keyboard"></div>
+    <button onclick="stopAllNotes()">Stop All Notes</button>
+    <div id="playing-notes"></div>
+    <script>
+        // Map keys to MIDI note numbers and names
+        const keyNoteMap = {
+            'a': {num: 60, name: 'C4'},
+            's': {num: 62, name: 'D4'},
+            'd': {num: 64, name: 'E4'},
+            'f': {num: 65, name: 'F4'},
+            'g': {num: 67, name: 'G4'},
+            'h': {num: 69, name: 'A4'},
+            'j': {num: 71, name: 'B4'},
+            'k': {num: 72, name: 'C5'}
+        };
+
+        // List of notes for visualization
+        const notes = Object.values(keyNoteMap);
+
+        // Render keyboard
+        const keyboardDiv = document.getElementById('keyboard');
+        notes.forEach(noteObj => {
+            const btn = document.createElement('button');
+            btn.textContent = `${noteObj.name} (${noteObj.num})`;
+            btn.className = 'note-btn';
+            btn.id = `btn-${noteObj.num}`;
+            btn.onmousedown = () => playNote(noteObj.num);
+            btn.onmouseup = () => stopNote(noteObj.num);
+            btn.onmouseleave = () => stopNote(noteObj.num);
+            keyboardDiv.appendChild(btn);
+        });
+
+        // Play note (PUT)
+        function playNote(noteNum) {
+            fetch(`/note/${noteNum}`, { method: 'PUT' })
+                .then(updatePlayingNotes);
+            document.getElementById(`btn-${noteNum}`).classList.add('active');
+        }
+
+        // Stop note (DELETE)
+        function stopNote(noteNum) {
+            fetch(`/note/${noteNum}`, { method: 'DELETE' })
+                .then(updatePlayingNotes);
+            document.getElementById(`btn-${noteNum}`).classList.remove('active');
+        }
+
+        // Stop all notes
+        function stopAllNotes() {
+            fetch('/notes', { method: 'DELETE' })
+                .then(updatePlayingNotes);
+            notes.forEach(noteObj => document.getElementById(`btn-${noteObj.num}`).classList.remove('active'));
+        }
+
+        // Keyboard events
+        const pressedKeys = {};
+        document.addEventListener('keydown', e => {
+            const noteObj = keyNoteMap[e.key];
+            if (noteObj && !pressedKeys[noteObj.num]) {
+                playNote(noteObj.num);
+                pressedKeys[noteObj.num] = true;
+            }
+        });
+        document.addEventListener('keyup', e => {
+            const noteObj = keyNoteMap[e.key];
+            if (noteObj) {
+                stopNote(noteObj.num);
+                pressedKeys[noteObj.num] = false;
+            }
+        });
+
+        // Show currently playing notes
+        function updatePlayingNotes() {
+            fetch('/notes')
+                .then(res => res.json())
+                .then(data => {
+                    // data is an array of 128 booleans
+                    const playingNums = [];
+                    data.forEach((v, i) => { if (v) playingNums.push(i); });
+                    document.getElementById('playing-notes').textContent =
+                        'Playing notes: ' + (playingNums.length ? playingNums.join(', ') : 'None');
+                    // Highlight active buttons
+                    notes.forEach(noteObj => {
+                        const btn = document.getElementById(`btn-${noteObj.num}`);
+                        if (playingNums.includes(noteObj.num)) btn.classList.add('active');
+                        else btn.classList.remove('active');
+                    });
+                });
+        }
+
+        // Initial fetch
+        updatePlayingNotes();
+        setInterval(updatePlayingNotes, 1000); // Poll every second
+    </script>
+</body>
+</html>
+

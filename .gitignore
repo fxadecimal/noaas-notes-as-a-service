@@ -1,0 +1,6 @@
+.fossil
+.fslckout
+__pycache__/
+.env
+.venv
+prompts.md
