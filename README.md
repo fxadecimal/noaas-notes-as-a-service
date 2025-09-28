@@ -9,9 +9,7 @@ just run
 # take a look at the justfile to see what is going on
 ```
 
-<video src="sr.mp4" controls="controls" width="600">
-    Your browser does not support the video tag.
-</video>
+![ss.gif][sr.gif]
 
 ![ss1.png](ss1.png)
 
